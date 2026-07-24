@@ -1,0 +1,17 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.streamlit/secrets.toml
+evaluation/results/*
+!evaluation/results/.gitkeep
+evaluation/_uploaded_test_cases.json
+data/*
+!data/.gitkeep
+screenshots/*
+!screenshots/.gitkeep
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/

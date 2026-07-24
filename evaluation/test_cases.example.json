@@ -1,0 +1,13 @@
+[
+  {
+    "id": "q01",
+    "question": "Belgedeki ana konu nedir?",
+    "reference_answer": "Kendi PDF'inize göre doldurun.",
+    "relevant_sources": [
+      {
+        "source": "sample.pdf",
+        "page": 1
+      }
+    ]
+  }
+]

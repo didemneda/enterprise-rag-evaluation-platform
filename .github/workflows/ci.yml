@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install lightweight test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "numpy>=1.26,<3" "pandas>=2.2,<3" "pytest>=8,<9"
+
+      - name: Compile source
+        run: |
+          python -m compileall -q app.py core embeddings evaluation ingestion llm pages retrieval
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Check tracked files for credential-like values
+        run: |
+          python - <<'PY'
+          import re
+          import subprocess
+          from pathlib import Path
+
+          patterns = [
+              re.compile(
+                  r"(?im)^AZURE_[A-Z0-9_]*(?:KEY|SECRET|TOKEN)"
+                  r"\s*=\s*(?!YOUR_|$)[A-Za-z0-9+/=_-]{24,}\s*$"
+              ),
+              re.compile(r"(?i)-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+          ]
+          allowed = {".env.example"}
+          failures = []
+
+          for name in subprocess.check_output(
+              ["git", "ls-files"], text=True
+          ).splitlines():
+              path = Path(name)
+              if path.name in allowed or not path.is_file():
+                  continue
+              text = path.read_text(encoding="utf-8", errors="ignore")
+              if any(pattern.search(text) for pattern in patterns):
+                  failures.append(name)
+
+          if failures:
+              raise SystemExit(
+                  "Potential credential found in: " + ", ".join(failures)
+              )
+          PY
